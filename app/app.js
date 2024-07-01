@@ -3,6 +3,7 @@ import connectDB from "../config/connectDB.js";
 import dotenv from "dotenv";
 import usersRoutes from "../routes/usersRoute.js";
 import { globalErrHandler, notFound } from "../middlewares/gobalErrHandler.js";
+import productRoutes from "../routes/productRoute.js";
 dotenv.config();
 
 //database connection
@@ -13,7 +14,8 @@ const app = express();
 app.use(express.json());
 
 //routes
-app.use("/", usersRoutes);
+app.use("/api/v1/users", usersRoutes);
+app.use("/api/v1/products", productRoutes);
 
 //err middleware
 app.use(notFound);
