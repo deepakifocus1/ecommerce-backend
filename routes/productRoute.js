@@ -5,6 +5,7 @@ import {
   getProductsCtrl,
   getProductCtrl,
   updateProductCtrl,
+  deleteProductCtrl,
 } from "../controllers/productCtrl.js";
 
 const productRoutes = express.Router();
@@ -12,5 +13,6 @@ const productRoutes = express.Router();
 productRoutes.post("/", isLoggedIn, createProductCtrl);
 productRoutes.get("/:id", getProductCtrl);
 productRoutes.get("/", getProductsCtrl);
-productRoutes.put("/:id", updateProductCtrl);
+productRoutes.put("/:id", isLoggedIn, updateProductCtrl);
+productRoutes.delete("/:id", isLoggedIn, deleteProductCtrl);
 export default productRoutes;
