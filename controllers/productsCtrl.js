@@ -1,6 +1,7 @@
 import asyncHandler from "express-async-handler";
 import Product from "../models/Product.js";
 import Category from "../models/Category.js";
+import Brand from "../models/Brand.js";
 
 //@desc  Create new product
 //@route Post /api/v1/products
@@ -30,6 +31,13 @@ export const createProductCtrl = asyncHandler(async (req, res) => {
       "Category not found, please create category first or check category name"
     );
   }
+  //find the brand
+  const brandFound = await Brand.findOne({ name: brand.toLowerCase() });
+  if (!brandFound) {
+    throw new Error(
+      "Brand not found, please create brand first or check brand name"
+    );
+  }
   //create new product
   const product = await Product.create({
     name,
@@ -46,6 +54,11 @@ export const createProductCtrl = asyncHandler(async (req, res) => {
   categoryFound.products.push(product._id);
   //resave
   await categoryFound.save();
+
+  //push the product into brand
+  brandFound.products.push(product._id);
+  //resave
+  await brandFound.save();
   //send the response
   res.status(201).json({
     status: "success",
@@ -58,7 +71,98 @@ export const createProductCtrl = asyncHandler(async (req, res) => {
 //@route GET /api/v1/products
 //@access Public
 
+// export const getProductsCtrl = asyncHandler(async (req, res) => {
+//   //query
+//   let productQuery = Product.find();
+
+//   //search by name
+//   if (req.query.name) {
+//     productQuery = productQuery.find({
+//       name: { $regex: req.query.name, $options: "i" },
+//     });
+//   }
+
+//   //filter by brand
+//   if (req.query.brand) {
+//     productQuery = productQuery.find({
+//       brand: { $regex: req.query.brand, $options: "i" },
+//     });
+//   }
+
+//   //filter by category
+//   if (req.query.category) {
+//     productQuery = productQuery.find({
+//       category: { $regex: req.query.category, $options: "i" },
+//     });
+//   }
+
+//   //filter by color
+//   if (req.query.color) {
+//     productQuery = productQuery.find({
+//       color: { $regex: req.query.color, $options: "i" },
+//     });
+//   }
+
+//   //filter by size
+//   if (req.query.size) {
+//     productQuery = productQuery.find({
+//       color: { $regex: req.query.size, $options: "i" },
+//     });
+//   }
+
+//   //filter by price range
+//   if (req.query.price) {
+//     const priceRange = req.query.price.split("-");
+//     //gte : greater or equal
+//     //lte : less than or equal to
+//     productQuery = productQuery.find({
+//       price: { $gte: priceRange[0], $lte: priceRange[1] },
+//     });
+//   }
+
+//   //pagination
+//   //page
+//   const page = parseInt(req.query.page) ? parseInt(req.query.page) : 1;
+//   //limit
+//   const limit = parseInt(req.query.limit) ? parseInt(req.query.limit) : 10;
+//   //startIndex
+//   const startIndex = (page - 1) * limit;
+//   //endIndex
+//   const endIndex = page * limit;
+//   //totalProducts
+//   const total = await Product.countDocuments();
+
+//   productQuery = await productQuery.skip(startIndex).limit(limit);
+
+//   // pagination results
+//   const pagination = {};
+//   if (endIndex < total) {
+//     pagination.next = {
+//       page: page + 1,
+//       limit,
+//     };
+//     if (startIndex > 0) {
+//       pagination.prev = {
+//         page: page - 1,
+//         limit,
+//       };
+//     }
+//   }
+//   //await the query
+//   const products = await productQuery;
+
+//   res.status(200).json({
+//     status: "success",
+//     total,
+//     results: products.length,
+//     pagination,
+//     message: "Products fetched successfully",
+//     products,
+//   });
+// });
+
 export const getProductsCtrl = asyncHandler(async (req, res) => {
+  console.log(req.query);
   //query
   let productQuery = Product.find();
 
@@ -86,58 +190,57 @@ export const getProductsCtrl = asyncHandler(async (req, res) => {
   //filter by color
   if (req.query.color) {
     productQuery = productQuery.find({
-      color: { $regex: req.query.color, $options: "i" },
+      colors: { $regex: req.query.color, $options: "i" },
     });
   }
 
   //filter by size
   if (req.query.size) {
     productQuery = productQuery.find({
-      color: { $regex: req.query.size, $options: "i" },
+      sizes: { $regex: req.query.size, $options: "i" },
     });
   }
-
   //filter by price range
   if (req.query.price) {
     const priceRange = req.query.price.split("-");
-    //gte : greater or equal
-    //lte : less than or equal to
+    //gte: greater or equal
+    //lte: less than or equal to
     productQuery = productQuery.find({
       price: { $gte: priceRange[0], $lte: priceRange[1] },
     });
   }
-
   //pagination
   //page
   const page = parseInt(req.query.page) ? parseInt(req.query.page) : 1;
   //limit
-  const limit = parseInt(req.query.limit) ? parseInt(req.query.limit) : 1;
-  //startIndex
+  const limit = parseInt(req.query.limit) ? parseInt(req.query.limit) : 10;
+  //startIdx
   const startIndex = (page - 1) * limit;
-  //endIndex
+  //endIdx
   const endIndex = page * limit;
-  //totalProducts
+  //total
   const total = await Product.countDocuments();
 
-  productQuery = await productQuery.skip(startIndex).limit(limit);
+  productQuery = productQuery.skip(startIndex).limit(limit);
 
-  // pagination results
+  //pagination results
   const pagination = {};
   if (endIndex < total) {
     pagination.next = {
       page: page + 1,
       limit,
     };
-    if (startIndex > 0) {
-      pagination.prev = {
-        page: page - 1,
-        limit,
-      };
-    }
   }
+  if (startIndex > 0) {
+    pagination.prev = {
+      page: page - 1,
+      limit,
+    };
+  }
+
   //await the query
-  const products = await productQuery;
-  res.status(200).json({
+  const products = await productQuery.populate("reviews");
+  res.json({
     status: "success",
     total,
     results: products.length,
@@ -152,7 +255,7 @@ export const getProductsCtrl = asyncHandler(async (req, res) => {
 //@access Public
 
 export const getProductCtrl = asyncHandler(async (req, res) => {
-  const product = await Product.findById(req.params.id);
+  const product = await Product.findById(req.params.id).populate("reviews");
   if (!product) {
     throw new Error("Product not found");
   }

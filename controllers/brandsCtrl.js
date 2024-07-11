@@ -87,6 +87,6 @@ export const deleteBrandCtrl = asyncHandler(async (req, res) => {
   await Brand.findByIdAndDelete(req.params.id);
   res.json({
     status: "success",
-    message: "Category deleted successfully",
+    message: "Brand deleted successfully",
   });
 });

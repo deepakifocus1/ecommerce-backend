@@ -3,7 +3,7 @@ import {
   registerUserCtrl,
   loginUserCtrl,
   getUserProfileCtrl,
-} from "../controllers/userCtrl.js";
+} from "../controllers/usersCtrl.js";
 import { isLoggedIn } from "../middlewares/isLoggedIn.js";
 
 const usersRoutes = express.Router();

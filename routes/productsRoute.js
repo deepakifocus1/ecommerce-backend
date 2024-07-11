@@ -6,7 +6,7 @@ import {
   getProductCtrl,
   updateProductCtrl,
   deleteProductCtrl,
-} from "../controllers/productCtrl.js";
+} from "../controllers/productsCtrl.js";
 
 const productRoutes = express.Router();
 
