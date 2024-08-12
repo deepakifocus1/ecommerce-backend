@@ -12,6 +12,11 @@ export const createOrderCtrl = asyncHandler(async (req, res, next) => {
 
   //find the user
   const user = await User.findById(req.userAuthId);
+
+  //check if user has shippingAddress
+  if (!user?.hasShippingAddress) {
+    throw new Error("Please provide shipping Address");
+  }
   //check if order is not empty
   if (orderItems?.length <= 0) {
     throw new Error("No Order Items");
@@ -20,12 +25,10 @@ export const createOrderCtrl = asyncHandler(async (req, res, next) => {
   const order = await Order.create({
     user: user?._id,
     orderItems,
-    shippingAddress,
+    shippingAddress: user.shippingAddress,
     totalPrice,
   });
-  //push order into user
-  user.orders.push(order?._id);
-  await user.save();
+
   //update the product qty and qtySold
   const products = await Product.find({ _id: { $in: orderItems } });
 
@@ -38,7 +41,17 @@ export const createOrderCtrl = asyncHandler(async (req, res, next) => {
     }
     await product.save();
   });
+  //push order into user
+  user.orders.push(order?._id);
+  await user.save();
+
   //make payment(stripe)
   //payment webhook
   //update the user order
+  res.json({
+    success: true,
+    message: "Order created",
+    order,
+    user,
+  });
 });
